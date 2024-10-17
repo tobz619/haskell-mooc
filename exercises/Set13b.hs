@@ -9,8 +9,7 @@ import Control.Monad.Trans.State
 import Data.Char
 import Data.IORef
 import Data.List
-import Data.ByteString (count, putStrLn)
-import Text.Parsec.Token (GenLanguageDef(opStart))
+import Data.Maybe (fromMaybe)
 
 
 ------------------------------------------------------------------------------
@@ -89,7 +88,7 @@ perhapsIncrement True x = modify (+x)
 perhapsIncrement False _ = return ()
 
 mapM2 :: Monad m => (a -> b -> m c) -> [a] -> [b] -> m [c]
-mapM2 op xs ys = zipWithM ($) (fmap op xs) ys
+mapM2 op xs ys = sequenceA $ [op x y | x <- xs, y <- ys]
 
 ------------------------------------------------------------------------------
 -- Ex 3: Finding paths.
@@ -160,9 +159,7 @@ visit maze place = do
 
 getAdjRooms :: [(String, [String])] -> String -> [String]
 getAdjRooms [] _ = []
-getAdjRooms maze x = case lookup x maze of
-                        Just places -> places
-                        Nothing  -> []
+getAdjRooms maze x = fromMaybe [] (lookup x maze)
 
 
 -- Now you should be able to implement path using visit. If you run
@@ -172,7 +169,7 @@ getAdjRooms maze x = case lookup x maze of
 path :: [(String,[String])] -> String -> String -> Bool
 path maze "" p = False
 path maze place1 place2 =
-  let listPlaces = snd $ runState (visit maze place1) []
+  let listPlaces = execState (visit maze place1) []
    in elem place2 listPlaces
 
 
@@ -221,7 +218,7 @@ allSums xs = map sum (filterM (const [True, False]) xs)
 --
 --   foldM :: (Monad m) => (a -> b -> m a) -> a -> [b] -> m a
 --
--- This function behaves like foldr, but the operation used is
+-- This function behaves like foldl, but the operation used is
 -- monadic. foldM f acc xs works by running f for each element in xs,
 -- giving it also the result of the previous invocation of f.
 --
@@ -399,6 +396,6 @@ instance Monad SL where
 mkCounter :: IO (IO (), IO Int)
 mkCounter = do
   r <- newIORef 0
-  let inc = modifyIORef (+1) r
+  let inc = modifyIORef r (+1)
   let get = readIORef r
   return (inc, get)

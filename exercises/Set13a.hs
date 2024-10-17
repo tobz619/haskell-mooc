@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+{-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-} -- this silences an uninteresting warning
+
 module Set13a where
 
 import Mooc.Todo
@@ -10,9 +12,6 @@ import Data.List
 import qualified Data.Map as Map
 
 import Examples.Bank
-import Data.Array.Base (safeIndex)
-import Distribution.Compat.Lens (_1)
-import Data.IntMap (findWithDefault, fromList)
 
 
 ------------------------------------------------------------------------------
@@ -32,7 +31,7 @@ import Data.IntMap (findWithDefault, fromList)
 
 (?>) :: Maybe a -> (a -> Maybe b) -> Maybe b
 Nothing ?> _ = Nothing   -- In case of failure, propagate failure
-Just x  ?> f = f x       -- In case of sucess, run the next computation
+Just x  ?> f = f x       -- In case of success, run the next computation
 
 -- DO NOT touch this definition!
 readNames :: String -> Maybe (String,String)
@@ -238,11 +237,11 @@ update = modify ((+1).(*2))
 -- should work.
 --
 -- Examples:
---   runState (paren '(') 3    ==> (4,())
---   runState (paren ')') 3    ==> (2,())
---   runState (paren ')') 0    ==> (-1,())
---   runState (paren ')') (-1) ==> (-1,())
---   runState (paren '(') (-1) ==> (-1,())
+--   runState (paren '(') 3    ==> ((),4)
+--   runState (paren ')') 3    ==> ((),2)
+--   runState (paren ')') 0    ==> ((),-1)
+--   runState (paren ')') (-1) ==> ((),-1)
+--   runState (paren '(') (-1) ==> ((),-1)
 --   parensMatch "()"          ==> True
 --   parensMatch "("           ==> False
 --   parensMatch "())"         ==> False

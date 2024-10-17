@@ -28,7 +28,7 @@ import Data.List
 --  maxBy head   [1,2,3] [4,5]  ==>  [4,5]
 
 maxBy :: (a -> Int) -> a -> a -> a
-maxBy measure a b = 
+maxBy measure a b =
     let resultA    = (measure a)
         resultB    = (measure b)
     in  if resultA > resultB then a else b
@@ -46,7 +46,7 @@ maxBy measure a b =
 
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
 mapMaybe f Nothing  = Nothing
-mapMaybe f (Just x) = Just (f x) 
+mapMaybe f (Just x) = Just (f x)
 
 ------------------------------------------------------------------------------
 -- Ex 3: implement the function mapMaybe2 that works like mapMaybe
@@ -85,14 +85,12 @@ palindromeHalfs :: [String] -> [String]
 palindromeHalfs xs = map firstHalf (filter palindrome xs)
 
 firstHalf :: String -> String
-firstHalf xs = if even (length xs) 
+firstHalf xs = if even (length xs)
                then take ((length xs) `div` 2) xs
                else take (((length xs) `div` 2)+1) xs
 
 palindrome :: String -> Bool
-palindrome s = if reverse s == s
-               then True
-               else False
+palindrome s = reverse s == s
 
 ------------------------------------------------------------------------------
 -- Ex 5: Implement a function capitalize that takes in a string and
@@ -110,16 +108,14 @@ palindrome s = if reverse s == s
 --   capitalize "goodbye cruel world" ==> "Goodbye Cruel World"
 
 capitalize :: String -> String
-capitalize str = 
+capitalize str =
     let indis   = words str
         indiCap = map capitalizeFirst indis
     in  unwords indiCap
 
-        
+
 capitalizeFirst :: String -> String
-capitalizeFirst (x:xs) = 
-    let capChar        = head $ map toUpper (x:xs)
-    in  [capChar] ++ xs
+capitalizeFirst (x:xs) = toUpper x : xs
 
 ------------------------------------------------------------------------------
 -- Ex 6: powers k max should return all the powers of k that are less
@@ -136,7 +132,7 @@ capitalizeFirst (x:xs) =
 --   * the function takeWhile
 
 powers :: Int -> Int -> [Int]
-powers k max = 
+powers k max =
     let numPower = map (\x -> k^x) [1..max]
     in  [1] ++ (takeWhile (<= max) numPower)
 
@@ -162,7 +158,7 @@ powers k max =
 --     ==> Avvt
 
 while :: (a->Bool) -> (a->a) -> a -> a
-while check update value = if check value == True
+while check update value = if check value
                            then while check update (update value)
                            else value
 
@@ -205,7 +201,7 @@ step k x = if x < k then Right (2*x) else Left x
 
 joinToLength :: Int -> [String] -> [String]
 joinToLength n str =  [ x ++ y | x <- str, y <- str, length (x++y) == n]
-   
+
 
 
 ------------------------------------------------------------------------------
@@ -221,7 +217,7 @@ joinToLength n str =  [ x ++ y | x <- str, y <- str, length (x++y) == n]
 --   [] +|+ []            ==> []
 
 (+|+) :: [a] -> [a] -> [a]
-(+|+) (a:_) (b:_) = [a,b] 
+(+|+) (a:_) (b:_) = [a,b]
 (+|+) (a:_) _ = [a]
 (+|+) _ (b:_) = [b]
 
@@ -244,7 +240,7 @@ sumRights' :: [Either a Int] -> Int
 sumRights' = sum . rights
 
 sumRights :: [Either a Int] -> Int
-sumRights xs = 
+sumRights xs =
     let nums = map (either (const 0) (id)) xs
     in  sum nums
 
@@ -338,8 +334,8 @@ aux p ("up":xs)      = aux (p `addPoint` (0,1)) xs
 aux p ("down":xs)    = aux (p `addPoint` (0,-1)) xs
 aux p ("left":xs)    = aux (p `addPoint` (-1,0)) xs
 aux p ("right":xs)   = aux (p `addPoint` (1,0)) xs
-aux p ("printX":xs)  = (show $ fst p):aux p xs
-aux p ("printY":xs)  = (show $ snd p):aux p xs
+aux p ("printX":xs)  = show (fst p):aux p xs
+aux p ("printY":xs)  = show (snd p):aux p xs
 
 addPoint :: (Int,Int) -> (Int,Int) -> (Int, Int)
 addPoint (x1,y1) (x2,y2) = (x1+x2, y1+y2)

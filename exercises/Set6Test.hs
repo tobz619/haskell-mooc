@@ -69,14 +69,32 @@ ex5_milk = $(withInstance "Price" "Milk" [|price|]) $ \price ->
   forAllBlind (choose (0,100)) $ \l ->
   $(testing [|price (Milk l)|]) (?==(15*l))
 
-ex6_egg =
-  $(withInstances1 "Price" ["Maybe", "[]"] [|price|]) $ \price ->
+ex6_maybe_egg =
+  $(withInstanceType "Price" [t|Maybe Egg|] [|price|]) $ \price ->
+  $(testing [|price [Just ChickenEgg]|]) (?==20)
+
+ex6_maybe_milk =
+  $(withInstanceType "Price" [t|Maybe Milk|] [|price|]) $ \price ->
+  forAllBlind (choose (0,100)) $ \l ->
+  $(testing [|price [Just (Milk l)]|]) (?==(15*l))
+
+ex6_list_egg =
+  $(withInstanceType "Price" [t|[Egg]|] [|price|]) $ \price ->
+  $(testing [|price [ChocolateEgg, ChickenEgg]|]) (?==50)
+
+ex6_list_milk =
+  $(withInstanceType "Price" [t|[Milk]|] [|price|]) $ \price ->
+  forAllBlind (choose (0,100)) $ \l ->
+  $(testing [|price [Milk l, Milk 1]|]) (?==(15*(l+1)))
+
+ex6_list_maybe_egg =
+  $(withInstanceType "Price" [t|[Maybe Egg]|] [|price|]) $ \price ->
   conjoin [$(testing [|price [Just ChocolateEgg, Nothing, Just ChickenEgg]|]) (?==50)
           ,$(testing [|price [Nothing, Nothing, Nothing :: Maybe Egg]|]) (?==0)]
 
 
-ex6_milk =
-  $(withInstances1 "Price" ["Maybe", "[]"] [|price|]) $ \price ->
+ex6_list_maybe_milk =
+  $(withInstanceType "Price" [t|[Maybe Milk]|] [|price|]) $ \price ->
   forAllBlind (choose (0,10)) $ \milk1 ->
   forAllBlind (choose (0,10)) $ \milk2 ->
   conjoin [$(testing [|price [Just (Milk milk1), Nothing, Just (Milk milk2)]|]) (?==(15*milk1+15*milk2))
@@ -95,42 +113,61 @@ ex7_eq_check =
           ,$(testing [|Finite i == Infinite|]) (?==False)
           ,$(testing [|Infinite == Infinite|]) (?==True)]
 
-ex7_trichotomy =
-  $(withInstance "Ord" "Number" [|(<) :: Number -> Number -> Bool|]) $ \(<) ->
-  $(withInstance "Ord" "Number" [|(>) :: Number -> Number -> Bool|]) $ \(>) ->
-  forAll_ $ \(x :: Number) ->
-  forAll_ $ \(y :: Number) ->
-  (x /= y) ==> counterexample
-  (show x ++ " /= " ++ show y ++ ", but neither " ++
-   show x ++ " < " ++ show y ++ " or " ++
-   show x ++ " > " ++ show y ++ " was true")
-  (x < y || x > y)
+ex7_finite_finite =
+  $(withInstance "Ord" "Number" [|((<) :: Number -> Number -> Bool
+                                  ,(>) :: Number -> Number -> Bool
+                                  ,(<=) :: Number -> Number -> Bool
+                                  ,(>=) :: Number -> Number -> Bool)|]) $ \((<),(>),(<=),(>=)) ->
+  forAll_ $ \i ->
+  forAll_ $ \(Positive delta) ->
+  let a = Finite i
+      b = Finite (i+delta)
+  in conjoin [$(testing [|a < b|]) (?==True)
+             ,$(testing [|b < a|]) (?==False)
+             ,$(testing [|a > b|]) (?==False)
+             ,$(testing [|b > a|]) (?==True)
+             ,$(testing [|a <= b|]) (?==True)
+             ,$(testing [|b <= a|]) (?==False)
+             ,$(testing [|a >= b|]) (?==False)
+             ,$(testing [|b >= a|]) (?==True)
+             ]
 
-ex7_reflexivity =
-  $(withInstance "Ord" "Number" [|(<=) :: Number -> Number -> Bool|]) $ \(<=) ->
-  forAll_ $ \(x :: Number) ->
-  $(testing [| x <= x |]) (?==True)
+ex7_finite_infinite =
+  $(withInstance "Ord" "Number" [|((<) :: Number -> Number -> Bool
+                                  ,(>) :: Number -> Number -> Bool
+                                  ,(<=) :: Number -> Number -> Bool
+                                  ,(>=) :: Number -> Number -> Bool)|]) $ \((<),(>),(<=),(>=)) ->
+  forAll_ $ \i ->
+  let a = Finite i
+      b = Infinite
+  in conjoin [$(testing [|a < b|]) (?==True)
+             ,$(testing [|b < a|]) (?==False)
+             ,$(testing [|a > b|]) (?==False)
+             ,$(testing [|b > a|]) (?==True)
+             ,$(testing [|a <= b|]) (?==True)
+             ,$(testing [|b <= a|]) (?==False)
+             ,$(testing [|a >= b|]) (?==False)
+             ,$(testing [|b >= a|]) (?==True)
+             ]
 
-ex7_antisymmetry =
-  $(withInstance "Ord" "Number" [|(<=) :: Number -> Number -> Bool|]) $ \(<=) ->
-  forAll_ $ \(x :: Number) ->
-  forAll_ $ \(y :: Number) ->
-  (x <= y && y <= x) ==> $(testing [| x == y |]) (?==True)
+ex7_infinite_infinite =
+  $(withInstance "Ord" "Number" [|((<) :: Number -> Number -> Bool
+                                  ,(>) :: Number -> Number -> Bool
+                                  ,(<=) :: Number -> Number -> Bool
+                                  ,(>=) :: Number -> Number -> Bool)|]) $ \((<),(>),(<=),(>=)) ->
+  conjoin [$(testing [|Infinite < Infinite|]) (?==False)
+          ,$(testing [|Infinite > Infinite|]) (?==False)
+          ,$(testing [|Infinite <= Infinite|]) (?==True)
+          ,$(testing [|Infinite >= Infinite|]) (?==True)
+          ]
 
-ex7_transitivity =
-  $(withInstance "Ord" "Number" [|(<=) :: Number -> Number -> Bool|]) $ \(<=) ->
-  forAll_ $ \(x :: Number) ->
-  forAll_ $ \(y :: Number) ->
-  forAll_ $ \(z :: Number) ->
-  (x <= y && y <= z) ==> $(testing [| x <= z |]) (?==True)
-
-ex7_finite =
+ex7_max_finite =
   $(withInstance "Ord" "Number" [|max :: Number -> Number -> Number|]) $ \max ->
   forAll_ $ \i ->
   forAll_ $ \j ->
   $(testing [|max (Finite i) (Finite j)|]) (?==Finite (Prelude.max i j))
 
-ex7_infinite =
+ex7_max_infinite =
   $(withInstance "Ord" "Number" [|max :: Number -> Number -> Number|]) $ \max ->
   forAll_ $ \i ->
   conjoin [$(testing [|max (Finite i) Infinite|]) (?==Infinite)
@@ -302,10 +339,12 @@ tests = [(1,"Eq Country",[ex1])
         ,(3,"Eq Name",[ex3])
         ,(4,"Eq List",[ex4_eq, ex4_neq])
         ,(5,"Price",[ex5_egg, ex5_milk])
-        ,(6,"Price List",[ex6_egg, ex6_milk])
-        ,(7,"Ord Number",[ ex7_eq_check, ex7_trichotomy, ex7_reflexivity
-                         , ex7_antisymmetry, ex7_transitivity, ex7_finite
-                         , ex7_infinite ])
+        ,(6,"Price List",[ ex6_maybe_egg, ex6_maybe_milk
+                         , ex6_list_egg, ex6_list_milk
+                         , ex6_list_maybe_egg, ex6_list_maybe_milk])
+        ,(7,"Ord Number",[ ex7_eq_check
+                         , ex7_finite_finite, ex7_finite_infinite, ex7_infinite_infinite
+                         , ex7_max_finite, ex7_max_infinite ])
         ,(8,"Eq RationalNumber",[ex8_refl, ex8_eq])
         ,(9,"simplify",[ex9_prime, ex9_eq])
         ,(10,"Num RationalNumber",[ex10_add_zero, ex10_add_commut, ex10_add_whole, ex10_add

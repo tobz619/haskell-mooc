@@ -96,7 +96,7 @@ isPalindrome str = reverse str == str
 palindromify :: String -> String
 palindromify s = if s == reverse s
                  then s
-                 else palindromify (init s \\ [head s])
+                 else palindromify (tail . init $ s)
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement safe integer division, that is, a function that
@@ -140,11 +140,11 @@ greet first last = "Hello, " ++  first ++ (if last == Nothing then "!" else " " 
 --   safeIndex ["a","b","c"] (-1)  ==> Nothing
 
 safeIndex :: [a] -> Int -> Maybe a
-safeIndex xs i
-    | i < 0                          = Nothing
-    | i == 0                         = Just (xs !! i)
-    | i > ((length xs)-1)            = Nothing
-    | otherwise                      = Just (xs !! i)
+safeIndex []     _ = Nothing
+safeIndex (x:xs) n
+    | n < 0  = Nothing
+    | n == 0 = Just x 
+    | otherwise = safeIndex xs (n-1)
 
 
 
@@ -157,7 +157,7 @@ safeIndex xs i
 --   eitherDiv 4 0   ==> Left "4/0"
 
 eitherDiv :: Integer -> Integer -> Either String Integer
-eitherDiv x y = if y == 0 then Left (fail) else Right (x `div` y)
+eitherDiv x y = if y == 0 then Left fail else Right (x `div` y)
     where fail = show x ++ "/0"
 
 ------------------------------------------------------------------------------

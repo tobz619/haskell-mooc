@@ -58,7 +58,7 @@ echo xs =  xs ++ ", " ++ echo (tail xs)
 countValid :: [String] -> Int
 countValid [] = 0
 countValid (serial:xs)
-  | length serial < 6 = countValid xs + 0
+  | length serial < 6 = countValid xs
   | otherwise = (checkserial serial) + (countValid xs)
       where checkserial (a:b:c:d:e:f:xs)
              | (c == e) || (d==f) = 1
@@ -86,10 +86,10 @@ repeated (x:y:ys)
 -- measurements have failed, so the lab is using the type
 --   Either String Int
 -- to track the measurements. A Left value represents a failed measurement,
--- while a Right value represents a succesful one.
+-- while a Right value represents a successful one.
 --
--- Compute the sum of all succesful measurements. If there are
--- succesful measurements, return the sum wrapped in a Right, but if
+-- Compute the sum of all successful measurements. If there are
+-- successful measurements, return the sum wrapped in a Right, but if
 -- there are none, return Left "no data".
 --
 -- Examples:
@@ -256,8 +256,8 @@ compose ((r,k1):xs) list =
 --   permute [2, 1, 0] (permute [2, 1, 0] "foo") ==> "foo"
 --   permute [1, 0, 2] (permute [0, 2, 1] [9,3,5]) ==> [5,9,3]
 --   permute [0, 2, 1] (permute [1, 0, 2] [9,3,5]) ==> [3,5,9]
---   permute ([0, 2, 1] `multiply` [1, 0, 2]) [9,3,5] ==> [5,9,3]
---   permute ([1, 0, 2] `multiply` [0, 2, 1]) [9,3,5] ==> [3,5,9]
+--   permute ([1, 0, 2] `multiply` [0, 2, 1]) [9,3,5] ==> [5,9,3]
+--   permute ([0, 2, 1] `multiply` [1, 0, 2]) [9,3,5] ==> [3,5,9]
 
 -- A type alias for index lists.
 type Permutation = [Int]

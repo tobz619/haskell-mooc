@@ -2,8 +2,8 @@
 
 module Mooc.Th (testing, testing', timeLimit,
                 isDefined, withDefined, hasType, hasType', importsOnly, show',
-                reifyType, DataType(..), FieldType(..), Constructor(..),
-                withInstance, withInstanceSilent, withInstance1, withInstances1,
+                reifyType, DataType(..), FieldType(..), Constructor(..), withConstructor,
+                withInstance, withInstanceType, withInstanceSilent, withInstance1, withInstances1,
                 classContains, defineInstance)
 where
 
@@ -12,6 +12,7 @@ import Data.List
 import Data.Maybe
 import Language.Haskell.TH hiding (reifyType)
 import Language.Haskell.TH.Syntax hiding (reifyType)
+import Language.Haskell.TH.Datatype (tvName)
 
 -- testing presence of definitions
 
@@ -80,6 +81,10 @@ data FieldType = SimpleType String | WeirdType
 
 interpretFieldType (ConT n) = SimpleType $ nameBase n
 interpretFieldType (VarT n) = SimpleType $ nameBase n
+interpretFieldType (AppT ListT t) =
+  case interpretFieldType t of
+    SimpleType s -> SimpleType $ "[" ++ s ++ "]"
+    _ -> WeirdType
 interpretFieldType (AppT t1 t2) =
   case (interpretFieldType t1, interpretFieldType t2) of
     (SimpleType s1, SimpleType s2) -> SimpleType $ s1 ++ " " ++ s2
@@ -97,20 +102,24 @@ interpretConstructor c = Weird (constructorName c)
 data DataType = DataType [String] [Constructor]
   deriving (Eq,Show,Lift)
 
+lookupType' s =
+    do n <- lookupTypeName s
+       case n of Nothing -> return Nothing
+                 Just n -> do info <- reify n
+                              return $ case info of
+                                         TyConI (DataD _ _ vs _ cs _) -> let cons = map interpretConstructor cs
+                                                                             vars = map bndrName vs
+                                                                         in Just (DataType vars cons)
+                                         _ -> Nothing
+
 reifyType :: String -> Q Exp
 reifyType s = do
-  n <- lookupTypeName s
-  case n of
+  info <- lookupType' s
+  case info of
     Nothing -> [|\k -> counterexample ("Type "++s++" not defined!") False|]
-    Just n -> do info <- reify n
-                 case info of
-                   TyConI (DataD _ _ vs _ cs _) -> let cons = map interpretConstructor cs
-                                                       vars = map bndrName vs
-                                                   in [|\k -> counterexample ("The type "++s) $ k (DataType vars cons)|]
-                   _ -> [|\k -> counterexample ("Definition "++s++" is not a data declaration!") False|]
+    Just d -> [|\k -> counterexample ("The type "++s) $ k d|]
 
-bndrName (PlainTV n _) = nameBase n
-bndrName (KindedTV n _ _) = nameBase n
+bndrName = nameBase . tvName
 
 constructorName = nameBase . constructorName'
 
@@ -123,10 +132,32 @@ constructorName' c = case c of
   GadtC (n:_) _ _ -> n
   RecGadtC (n:_) _ _ -> n
 
+withConstructor :: String -> String -> [String] -> Q Exp
+withConstructor typName consName argTypes = do
+  d <- lookupType' typName
+  case d of
+    Nothing -> [|\k -> counterexample ("Type "++typName++" not defined!") False|]
+    Just (DataType _ cs) ->
+        case filter ok cs of
+          [] -> [|\k -> counterexample ("Type "++typName++" should have a constructor named "++consName) False|]
+          [Weird _] -> [|\k -> counterexample ("Constructor "++consName++" of type "++typName++" is weird. Make it normal.") False|]
+          [Constructor _ ts]
+              | ts == map SimpleType argTypes -> [|\k -> counterexample consName (k $(varOrCon $ mkName consName))|]
+              | otherwise -> [|\k -> counterexample ("Constructor "++consName++" of type "++typName++" should have fields of types "++intercalate ", " argTypes) False |]
+    where ok (Constructor n _) = n == consName
+          ok (Weird n) = n == consName
+
 -- testing classes
 
 data Instance = Found | NotFound String String | NoClass String | NoType String
   deriving (Show, Eq)
+
+lookupInstanceResolved :: Name -> Type -> Q Instance
+lookupInstanceResolved cl t = do
+  b <- isInstance cl [t]
+  if b
+    then return Found
+    else return $ NotFound (nameBase cl) (showType t)
 
 lookupInstance :: String -> String -> Q Instance
 lookupInstance cln typn = do
@@ -135,10 +166,7 @@ lookupInstance cln typn = do
   case (cl,typ) of
     (Nothing,_) -> return $ NoClass cln
     (_,Nothing) -> return $ NoType typn
-    (Just c, Just t) -> do b <- isInstance c [(ConT t)]
-                           if b
-                             then return Found
-                             else return $ NotFound cln typn
+    (Just c, Just t) -> lookupInstanceResolved c (ConT t)
 
 withInstance :: String -> String -> Q Exp -> Q Exp
 withInstance cln typn val = do
@@ -148,6 +176,17 @@ withInstance cln typn val = do
     NoType typn -> [|\k -> counterexample ("Type "++typn++" not found") (property False)|]
     NotFound cln typn -> [|\k -> counterexample ("Type "++typn++" is not an instance of class "++cln) (property False)|]
     Found -> [|\k -> k $val|]
+
+withInstanceType :: String -> Q Type -> Q Exp -> Q Exp
+withInstanceType cln qt val = do
+  cl <- lookupTypeName cln
+  t <- qt
+  case cl of
+    Nothing -> [|\k -> counterexample ("Class "++cln++" not found") (property False)|]
+    Just cl -> do ins <- lookupInstanceResolved cl t
+                  case ins of
+                    NotFound cln typn -> [|\k -> counterexample ("Type "++typn++" is not an instance of class "++cln) (property False)|]
+                    Found -> [|\k -> k $val|]
 
 withInstanceSilent :: String -> String -> Q Exp -> String -> Q Exp
 withInstanceSilent cln typn val err = do
@@ -180,10 +219,7 @@ lookupInstance1 cln typn = do
   case (cl,cons) of
     (Nothing,_) -> return $ NoClass cln
     (_,Nothing) -> return $ NoType typn
-    (Just c, Just t) -> do b <- isInstance c [AppT t (VarT (mkName "a"))]
-                           if b
-                             then return Found
-                             else return $ NotFound cln typn
+    (Just c, Just t) -> lookupInstanceResolved c (AppT t (VarT (mkName "a")))
 
 withInstance1 :: String -> String -> Q Exp -> Q Exp
 withInstance1 cln typn val = do

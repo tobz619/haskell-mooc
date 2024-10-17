@@ -22,12 +22,8 @@ import Mooc.Todo
 --   False ||| undefined ==> an error!
 
 (|||) :: Bool -> Bool -> Bool
-x ||| y =
-  let vals = [y,x]
-      head (x:xs) = x
-   in case vals of
-        [False,True] -> True
-        (y:ys)       -> head (y:ys)
+_ ||| True = True
+x ||| False = x
 
 
 

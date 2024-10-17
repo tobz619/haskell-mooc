@@ -1,5 +1,3 @@
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE InstanceSigs #-}
 module Set15 where
 
 import Mooc.Todo
@@ -136,8 +134,11 @@ data Person = Person String Int Bool
 
 twoPersons :: Applicative f =>
   f String -> f Int -> f Bool -> f String -> f Int -> f Bool -> f [Person]
+
 twoPersons name1 age1 employed1 name2 age2 employed2 =
- sequenceA $ zipWith3 (liftA3 Person) [name1,name2] [age1, age2] [employed1, employed2]
+  traverse (\(n, a ,e) -> Person <$> n <*> a <*> e) [(name1,age1,employed1), (name2, age2, employed2)]
+-- twoPersons name1 age1 employed1 name2 age2 employed2 =
+--  sequenceA $ zipWith3 (liftA3 Person) [name1,name2] [age1, age2] [employed1, employed2]
 
 twoPersons' :: Applicative f => f String -> f Int -> f Bool -> f String -> f Int -> f Bool -> f [Person]
 twoPersons' name1 age1 employed1 name2 age2 employed2 =
@@ -400,16 +401,15 @@ instance (Functor f, Functor g) => Functor (Both f g) where
 --    ==> Both (Just (Errors ["err"]))
 --  liftA2 (&&) (Both (Just (invalid "err"))) (Both (Just (invalid "umm")))
 --    ==> Both (Just (Errors ["err","umm"]))
---  liftA2 (+) (Both [pure 1, invalid "fail 1"]) (Both [pure 10, pure 100, invalid "fail 2"])
+--  liftA2 (+) (Both [pure 1, invalid "fail 1"])
+--             (Both [pure 10, pure 100, invalid "fail 2"])
 --    ==> Both [Ok 11,Ok 101,Errors ["fail 2"],
 --              Errors ["fail 1"],Errors ["fail 1"],
 --              Errors ["fail 1","fail 2"]]
 
 instance (Applicative f, Applicative g) => Applicative (Both f g) where
-  pure :: (Applicative f, Applicative g) => a -> Both f g a
   pure = Both . pure . pure
 
-  liftA2 :: (Applicative f, Applicative g) => (a -> b -> c) -> Both f g a -> Both f g b -> Both f g c
   -- liftA2 f (Both g) (Both h) = Both $ liftA2 f <$> g <*> h
   liftA2 f g (Both h) = Both $ let Both g' = f <$> g
                                 in liftA2 (<*>) g' h

@@ -6,7 +6,6 @@ import Data.IORef
 import System.IO
 
 import Mooc.Todo
-import Control.Monad.RWS (MonadState(state))
 
 
 ------------------------------------------------------------------------------
@@ -124,7 +123,7 @@ compose op1 op2 c = do
 --   ["module Set11b where","","import Control.Monad"]
 
 hFetchLines :: Handle -> IO [String]
-hFetchLines all = fmap lines $ hGetContents all
+hFetchLines all = lines <$> hGetContents all
 
 
 ------------------------------------------------------------------------------
@@ -140,8 +139,9 @@ hFetchLines all = fmap lines $ hGetContents all
 hSelectLines :: Handle -> [Int] -> IO [String]
 hSelectLines h nums = do
     contents <- hFetchLines h
-    let search = map (contents !!) (map (subtract 1) nums)
-    return search
+    let indexed = zip [1..] contents
+    fmap snd <$> filterM (\(i, c) -> pure (i `elem` nums)) indexed
+    
 
 
 ------------------------------------------------------------------------------
@@ -185,10 +185,9 @@ counter ("quit",n)  = (False,"bye bye",n)
 interact' :: ((String,st) -> (Bool,String,st)) -> st -> IO st
 interact' f state = do
     instruct <- getLine
-    let getBool  = (\(a,b,c) -> (a,b)) $ f (instruct, state) 
-        newState = (\(a,b,c) -> c) $ f (instruct, state)
-    if fst getBool
-        then do putStrLn (snd getBool)
+    let (b, str, newState) = f (instruct, state)
+    if b
+        then do putStrLn str
                 interact' f newState
-        else do putStrLn (snd getBool)
+        else do putStrLn str
                 return newState

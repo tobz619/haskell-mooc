@@ -132,7 +132,7 @@ countdown n = "Ready! " ++ count n ++ "Liftoff!"
 -- Hint: remember the mod function!
 
 smallestDivisor :: Integer -> Integer
-smallestDivisor n = smallestDivisorFind 2 n
+smallestDivisor = smallestDivisorFind 2
 
 smallestDivisorFind :: Integer -> Integer -> Integer
 smallestDivisorFind t n
@@ -166,10 +166,10 @@ isPrime n
 biggestPrimeAtMost :: Integer -> Integer
 biggestPrimeAtMost n
  | n < 2                 = n
- | isPrime n == True     = n
+ | isPrime n             = n
  | otherwise             = searchPrime n
 
 searchPrime :: Integer -> Integer
-searchPrime n = if isPrime n == True
+searchPrime n = if isPrime n
                 then n
                 else searchPrime (n-1)

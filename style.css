@@ -1,10 +1,12 @@
 body {
   margin: 0 0 0 0;
-  padding-left: 5%;
   font-family: sans-serif;
   background: #fffad1;
   color: #211c00;
   /*background: url("chevron.png") repeat;*/
+}
+div#text-container {
+  padding-left: 5%
 }
 a[href] {
   color: black;
@@ -53,6 +55,9 @@ div#text {
     overflow-y: scroll;
     order: 2;
     background: #211c00;
+  }
+  nav#TOC code {
+    background: inherit;
   }
   nav#TOC ul {
     padding-left: 2em;
@@ -104,11 +109,22 @@ ol.quiz li:hover {
   background: #ffd608;
   cursor: pointer;
 }
+ol.quiz li:hover code {
+  background: inherit;
+}
 ol.quiz li:active {
-  background: red;
+  background: salmon;
+}
+ol.quiz li:active::after {
+  background: salmon;
+  content: "✘";
 }
 ol.quiz li.correct:active {
-  background: green;
+  background: yellowgreen;
+}
+ol.quiz li.correct:active::after {
+  background: yellowgreen;
+  content: "✔";
 }
 pre {
   border-radius: 5px;
@@ -124,6 +140,9 @@ code.sourceCode {
 code {
   font-family: Consolas, Monaco, Lucida Console, Liberation Mono, Bitstream Vera Sans Mono, monospace;
   white-space: pre; /* make non-syntax-colored code blocks behave like colored ones */
+}
+p code, table code, li code {
+  background: #fff5b6;
 }
 table, img {
   max-width: 80%;

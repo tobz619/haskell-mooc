@@ -17,13 +17,15 @@ import Mooc.Todo
 --   * replicateM
 --   * readFile
 --   * lines
+--
+-- Do not add any new imports! E.g. Data.IORef is forbidden.
 
 ------------------------------------------------------------------------------
 -- Ex 1: define an IO operation hello that prints two lines. The
 -- first line should be HELLO and the second one WORLD
 
 hello :: IO ()
-hello = do 
+hello = do
     putStrLn $ "HELLO"
     putStrLn $ "WORLD"
 
@@ -44,7 +46,7 @@ greet name = putStrLn $ "HELLO " ++ name
 greet2 :: IO ()
 greet2 = do
     name <- getLine
-    greet name 
+    greet name
 
 ------------------------------------------------------------------------------
 -- Ex 4: define the IO operation readWords n which reads n lines from
@@ -61,14 +63,13 @@ readWords :: Int -> IO [String]
 readWords 0 = return []
 readWords n = do
     putStrLn $ "Enter " ++ show n ++ " words and they'll be given back in order!"
-    values <- getList n   
-    return values
-    
+    getList n
+
 getList:: Int -> IO [String]
 getList n = (go n []) where
-    go n xs = do 
+    go n xs = do
             x <- getLine
-            if (n-1) == 0 
+            if (n-1) == 0
             then return $ sort (x:xs)
             else go (n-1) (x:xs)
 ------------------------------------------------------------------------------
@@ -87,9 +88,8 @@ getList n = (go n []) where
 
 readUntil :: (String -> Bool) -> IO [String]
 readUntil f = do
-    values <- fmap reverse makeList
-    return values
-        where makeList = (go [])
+    fmap reverse makeList
+        where makeList = go []
                     where go xs = do
                             x <- getLine
                             if f x
@@ -101,7 +101,7 @@ readUntil f = do
 
 countdownPrint :: Int -> IO ()
 countdownPrint n = do
-    let vals = (init . unlines) (map show $ reverse [0..n])
+    let vals = init . unlines . map show $ [n, n-1 .. 0]
     putStrLn vals
 
 
@@ -122,13 +122,13 @@ isums n = go n 0
         where go 0 y = return y
               go n y = do
                     x <- readLn
-                    if n == 0 
+                    if n == 0
                     then return y
                     else do
                         print (y + x)
                         go (n-1) (y + x)
 
-                  
+
 
 
 ------------------------------------------------------------------------------
@@ -168,7 +168,7 @@ ask = do putStrLn "Y/N?"
 while :: IO Bool -> IO () -> IO ()
 while cond op = do
     a <- do cond
-    if a == True
+    if a
         then do op
                 while cond op
         else return ()
@@ -197,7 +197,7 @@ while' cond op = whenM cond iteration
 
 debug :: String -> IO a -> IO a
 debug s op = do
-    putStrLn s 
+    putStrLn s
     a <- op
     putStrLn s
     return a

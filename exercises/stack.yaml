@@ -1,7 +1,2 @@
-resolver: lts-19.20
+resolver: lts-20.25 # GHC 9.2.8
 install-ghc: true
-allow-newer: true
-# workaround for https://github.com/commercialhaskell/lts-haskell/issues/329:
-flags:
-  mintty:
-    win32-2-13-1: false

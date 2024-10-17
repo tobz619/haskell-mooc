@@ -1,7 +1,7 @@
 -- Exercise set 4a:
 --
--- * using type classes
--- * working with lists
+--  * using type classes
+--  * working with lists
 --
 -- Type classes you'll need
 --  * Eq
@@ -21,6 +21,7 @@ import Data.List
 import Data.Ord
 import qualified Data.Map as Map
 import Data.Array
+import Data.Function (on)
 
 ------------------------------------------------------------------------------
 -- Ex 1: implement the function allEqual which returns True if all
@@ -51,11 +52,17 @@ allEqual xs =
 --   distinct [1,2] ==> True
 
 distinct :: Eq a => [a] -> Bool
-distinct [] =  True
-distinct [x] = True
-distinct xs
- | (length xs) == (length (nub xs)) = True
- | otherwise = False
+distinct = go []
+    where go _  [] = True
+          go acc (x:xs)
+            | x `elem` acc = False
+            | otherwise = go (x:acc) xs 
+
+-- distinct [] =  True
+-- distinct [x] = True
+-- distinct xs
+--  | (length xs) == (length (nub xs)) = True
+--  | otherwise = False
 
 ------------------------------------------------------------------------------
 -- Ex 3: implement the function middle that returns the middle value
@@ -104,14 +111,18 @@ rangeOf xs =  (minimum xs) `subtract` (maximum xs)
 --   longest ["bcd","def","ab"] ==> "bcd"
 
 longest :: (Ord a) => [[a]] -> [a]
-longest [x]           = x
-longest (x:y:xs)      = max
-    where max
-            | (length x) < (length y)  = longest (y:xs)
-            | (length x) > (length y)  = longest (x:xs)
-            | (length x) == (length y) = if (head x) < (head y) 
-                                         then longest (x:xs) 
-                                         else longest (y:xs)
+longest = foldr1 getLarger
+        where getLarger cand curr
+                | length curr < length cand = cand
+                | otherwise = curr
+-- longest [x]           = x
+-- longest (x:y:xs)      = max
+--     where max
+--             | (length x) < (length y)  = longest (y:xs)
+--             | (length x) > (length y)  = longest (x:xs)
+--             | (length x) == (length y) = if (head x) < (head y) 
+--                                          then longest (x:xs) 
+--                                          else longest (y:xs)
 
 ------------------------------------------------------------------------------
 -- Ex 6: Implement the function incrementKey, that takes a list of
@@ -128,13 +139,10 @@ longest (x:y:xs)      = max
 --   incrementKey 'a' [('a',3.4)] ==> [('a',4.4)]
 
 incrementKey :: (Eq k, Num v) => k -> [(k,v)] -> [(k,v)]
-incrementKey key []           = []
-incrementKey key [(k,v)]      = map (\(k,v) -> if k == key 
-                                               then (k,v+1) 
-                                               else (k,v)) [(k,v)]
-incrementKey key ((k,v):rest) = map (\(k,v) -> if k == key 
-                                               then (k,v+1) 
-                                               else (k,v)) ((k,v):rest)
+incrementKey key = map f
+        where f (k, v)
+                | key == k  = (k, v+1)
+                | otherwise = (k, v  )
 
 ------------------------------------------------------------------------------
 -- Ex 7: compute the average of a list of values of the Fractional

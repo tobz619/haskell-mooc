@@ -39,9 +39,7 @@ import Mooc.Todo
 --   buildList 7 0 3 ==> [3]
 
 buildList :: Int -> Int -> Int -> [Int]
-buildList start count end
-    | count <= 0       = [end]
-    | otherwise = start : buildList start (count-1) end
+buildList start count end = todo
 
 ------------------------------------------------------------------------------
 -- Ex 2: given i, build the list of sums [1, 1+2, 1+2+3, .., 1+2+..+i]
@@ -170,6 +168,8 @@ merge (x:xs) (y:ys)
 --   mymaximum (<) 4 [1,3,2] ==> 1    -- note changed biggerThan
 --   mymaximum (\xs ys -> length xs > length ys) [] [[1,2],[3]]
 --     ==> [1,2]
+--   mymaximum (\(a,b) (c,d) -> b > d) ("",0) [("Banana",7),("Mouse",8)]
+--     ==> ("Mouse",8)
 
 mymaximum :: (Ord a) => (a -> a -> Bool) -> a -> [a] -> a
 mymaximum _ initial []          = initial
@@ -177,7 +177,6 @@ mymaximum bigger initial (x:xs)
   | bigger initial x = mymaximum bigger initial xs
   | not (bigger initial x) = mymaximum bigger x xs
   | otherwise = initial
-
 
 ------------------------------------------------------------------------------
 -- Ex 9: define a version of map that takes a two-argument function

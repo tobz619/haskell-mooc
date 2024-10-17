@@ -141,6 +141,8 @@ bake events = go Start events
 -- work on empty lists? Now we can reimplement average for NonEmpty
 -- lists and avoid the edge case.
 --
+-- PS. The Data.List.NonEmpty type has been imported for you
+--
 -- Examples:
 --   average (1.0 :| [])  ==>  1.0
 --   average (1.0 :| [2.0,3.0])  ==>  2.0
@@ -288,17 +290,17 @@ data PasswordRequirement =
 
 passwordAllowed :: String -> PasswordRequirement -> Bool
 passwordAllowed str (MinimumLength x)  = length str >= x
-passwordAllowed str (ContainsSome x)   = filter (`elem` x) str /= ""
+passwordAllowed str (ContainsSome x)   = any (`elem` x) str
 passwordAllowed str (DoesNotContain x)
   | any (`elem` x) str = False
   | otherwise = True
 
 passwordAllowed str (And x y)
-  | (passwordAllowed str x) == True && (passwordAllowed str y) == True = True
+  | passwordAllowed str x && passwordAllowed str y = True
   | otherwise = False
 
 passwordAllowed str (Or x y)
-  | (passwordAllowed str x) == True || (passwordAllowed str y) == True = True
+  | passwordAllowed str x || passwordAllowed str y = True
   | otherwise = False
 
 ------------------------------------------------------------------------------
@@ -328,19 +330,13 @@ literal :: Integer -> Arithmetic
 literal = Numbers
 
 operation :: String -> Arithmetic -> Arithmetic -> Arithmetic
-operation "+" (Numbers x) (Numbers y) = (Opers "+" (Numbers x) (Numbers y))
-operation "*" (Numbers x) (Numbers y) = (Opers "*" (Numbers x) (Numbers y))
-operation "+" (Numbers x) y           = (Opers "+" (Numbers x) y)
-operation "*" (Numbers x) y           = (Opers "*" (Numbers x) y)
-operation "+" x y                     = (Opers "+" x y)
-operation "*" x y                     = (Opers "*" x y)
+operation "+" x y = Opers "+" x y
+operation "*" x y = Opers "*" x y
 
 evaluate :: Arithmetic -> Integer
 evaluate (Numbers x)     = x
 evaluate (Opers "+" (Numbers x) (Numbers y)) = x + y
 evaluate (Opers "*" (Numbers x) (Numbers y)) = x * y
-evaluate (Opers "+" (Numbers x) y)           = x + evaluate y
-evaluate (Opers "*" (Numbers x) y)           = x * evaluate y
 evaluate (Opers "+" x y)                     = evaluate x + evaluate y
 evaluate (Opers "*" x y)                     = evaluate x * evaluate y
 

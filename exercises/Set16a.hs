@@ -5,7 +5,6 @@ import Mooc.Todo
 import Test.QuickCheck
 
 import Data.List
-import Mooc.Todo (todo)
 
 ------------------------------------------------------------------------------
 -- Ex 1: Write a Property that checks that a given list is sorted (in
@@ -219,13 +218,7 @@ data Expression = Plus Arg Arg | Minus Arg Arg
   deriving (Show, Eq)
 
 instance Arbitrary Arg where
-  arbitrary = oneof [getNum, getChar]
-              where getChar = do
-                      a <- elements "abcxyz"
-                      return (Variable a)
-                    getNum = do
-                      a <- choose (0,10)
-                      return (Number a)
+  arbitrary = oneof [Number <$> choose (0,10), Variable <$> elements "abcxyz"]
 
 instance Arbitrary Expression where
   arbitrary = oneof [Plus <$> arbitrary <*> arbitrary
