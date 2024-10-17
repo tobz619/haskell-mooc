@@ -112,8 +112,9 @@ rangeOf xs =  (minimum xs) `subtract` (maximum xs)
 
 longest :: (Ord a) => [[a]] -> [a]
 longest = foldr1 getLarger
-        where getLarger cand curr
+        where getLarger cand curr 
                 | length curr < length cand = cand
+                | length curr == length cand && curr > cand = cand
                 | otherwise = curr
 -- longest [x]           = x
 -- longest (x:y:xs)      = max

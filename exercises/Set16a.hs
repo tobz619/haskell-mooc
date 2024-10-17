@@ -85,7 +85,7 @@ inputInOutput input output =
 
 -- This function passes both the sumIsLength and inputInOutput tests
 freq2 :: Eq a => [a] -> [(a,Int)]
-freq2 = map (const (,1))
+freq2 = flip zip [1,1..] 
 
 ------------------------------------------------------------------------------
 -- Ex 4: Implement a Property that takes a pair (x,n) from the

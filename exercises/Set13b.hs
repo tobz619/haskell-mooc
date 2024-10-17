@@ -88,7 +88,7 @@ perhapsIncrement True x = modify (+x)
 perhapsIncrement False _ = return ()
 
 mapM2 :: Monad m => (a -> b -> m c) -> [a] -> [b] -> m [c]
-mapM2 op xs ys = sequenceA $ [op x y | x <- xs, y <- ys]
+mapM2 = zipWithM 
 
 ------------------------------------------------------------------------------
 -- Ex 3: Finding paths.

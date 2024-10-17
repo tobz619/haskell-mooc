@@ -75,8 +75,8 @@ eeny x = if even x then "eeny" else "meeny"
 
 checkPassword :: String -> String
 checkPassword password 
- | password == "swordfish"  = "You're in"                 
- | password == "mellon"     = "You're in"
+ | password == "swordfish"  = "You're in."                 
+ | password == "mellon"     = "You're in."
  | otherwise                = "ACCESS DENIED!"
  
 
